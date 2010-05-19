@@ -3,7 +3,7 @@ use Moose;
 use namespace::autoclean;
 use Text::Xslate;
 
-our $VERSION = '0.00001';
+our $VERSION = '0.00002';
 
 extends 'Catalyst::View';
 
@@ -133,7 +133,7 @@ sub process {
         $self->render( $c, $template, $stash );
     };
     if (my $err = $@) {
-        return $self->_rendering_error($err);
+        return $self->_rendering_error($c, $err);
     }
 
     my $res = $c->response;

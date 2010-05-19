@@ -1,12 +1,14 @@
 ---
-abstract: ~
+abstract: 'Text::Xslate View Class'
+author:
+  - 'Copyright (c) 2010 Daisuke Maki C<< <daisuke@endeworks.jp> >>'
 build_requires:
   ExtUtils::MakeMaker: 6.42
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
 generated_by: 'Module::Install version 0.97'
-license: unknown
+license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
@@ -17,4 +19,6 @@ no_index:
     - t
 requires:
   Catalyst: 5.8
-version: 0.00001
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.00002
