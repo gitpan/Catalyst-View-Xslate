@@ -1,0 +1,21 @@
+Changes
+inc/Module/Install.pm
+inc/Module/Install/Base.pm
+inc/Module/Install/Can.pm
+inc/Module/Install/Fetch.pm
+inc/Module/Install/Makefile.pm
+inc/Module/Install/Metadata.pm
+inc/Module/Install/Win32.pm
+inc/Module/Install/WriteAll.pm
+lib/Catalyst/View/Xslate.pm
+Makefile.PL
+MANIFEST			This list of files
+META.yml
+t/001_load.t
+t/002_render.t
+t/lib/TestApp.pm
+t/lib/TestApp/Controller/Root.pm
+t/lib/TestApp/root/specified_template.tx
+t/lib/TestApp/root/test.tx
+t/lib/TestApp/View/Xslate/Appconfig.pm
+t/lib/TestApp/View/Xslate/Pkgconfig.pm
