@@ -3,7 +3,7 @@ use Moose;
 use namespace::autoclean;
 use Text::Xslate;
 
-our $VERSION = '0.00004';
+our $VERSION = '0.00005';
 
 extends 'Catalyst::View';
 
@@ -116,6 +116,14 @@ sub _build_xslate {
     
     my $xslate = Text::Xslate->new(%args);
     $self->xslate( $xslate );
+}
+
+sub ACCEPT_CONTEXT {
+    my ($self, $c) = @_;
+    if ( ! $self->xslate ) {
+        $self->_build_xslate( $c );
+    }
+    return $self;
 }
 
 sub process {
