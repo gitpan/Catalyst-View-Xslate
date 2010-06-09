@@ -3,7 +3,7 @@ use Moose;
 use namespace::autoclean;
 use Text::Xslate;
 
-our $VERSION = '0.00003';
+our $VERSION = '0.00004';
 
 extends 'Catalyst::View';
 
@@ -40,7 +40,7 @@ has cache => (
     trigger => $clearer,
 );
 
-has functions => (
+has function => (
     is => 'rw',
     isa => 'HashRef',
     default => sub { +{} },
@@ -94,7 +94,7 @@ sub _build_xslate {
         path      => $self->path || [ $c->path_to('root') ],
         cache_dir => $self->cache_dir || File::Spec->catdir(File::Spec->tmpdir, $name),
         cache     => $self->cache,
-        functions => $self->functions,
+        function  => $self->function,
         module    => $self->module,
     );
 
@@ -212,9 +212,19 @@ cause the previously created underlying Text::Xslate object to be cleared
 
 =head2 cache
 
-=head2 functions
+=head2 function
 
 =head2 module
+
+Use this to enable TT2 compatible variable methods via Text::Xslate::Bridge::TT2 or Text::Xslate::Bridge::TT2Like
+
+    package MyApp::View::Xslate;
+    use Moose;
+    extends 'Catalyst::View::Xslate';
+
+    has '+module' => (
+        default => sub { [ 'Text::Xslate::Bridge::TT2Like' ] }
+    );
 
 =head1 TODO
 
