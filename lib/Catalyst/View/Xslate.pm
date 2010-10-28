@@ -1,9 +1,10 @@
 package Catalyst::View::Xslate;
 use Moose;
-use namespace::autoclean;
+use Encode;
 use Text::Xslate;
+use namespace::autoclean;
 
-our $VERSION = '0.00007';
+our $VERSION = '0.00008';
 
 extends 'Catalyst::View';
 
@@ -17,6 +18,12 @@ has template_extension => (
     is => 'rw',
     isa => 'Str',
     default => '.tx'
+);
+
+has content_charset => (
+    is => 'rw',
+    isa => 'Str',
+    default => 'UTF-8'
 );
 
 my $clearer = sub { $_[0]->clear_xslate };
@@ -146,10 +153,10 @@ sub process {
 
     my $res = $c->response;
     if (! $res->content_type) {
-        $res->content_type('text/html; charset=utf-8');
+        $res->content_type('text/html; charset=' . $self->content_charset);
     }
 
-    $res->body( $output );
+    $res->body( encode($self->content_charset, $output) );
 
     return 1;
 }
@@ -207,6 +214,10 @@ The name used to refer to the Catalyst app object in the template
 
 The suffix used to auto generate the template name from the action name
 (when you do not explicitly specify the template filename);
+
+=head2 content_charset
+
+The charset used to output the response body. The value defaults to 'UTF-8'.
 
 =head2 Text::Xslate CONFIGURATION
 
