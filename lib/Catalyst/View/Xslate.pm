@@ -6,7 +6,7 @@ use Text::Xslate;
 use namespace::autoclean;
 use Scalar::Util qw/blessed weaken/;
 
-our $VERSION = '0.00009';
+our $VERSION = '0.00010';
 
 extends 'Catalyst::View';
 
@@ -44,7 +44,7 @@ has cache_dir => (
 
 has cache => (
     is => 'rw',
-    isa => 'Bool',
+    isa => 'Int',
     default => 1,
     trigger => $clearer,
 );
