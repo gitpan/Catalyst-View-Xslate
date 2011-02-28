@@ -6,7 +6,7 @@ use Text::Xslate;
 use namespace::autoclean;
 use Scalar::Util qw/blessed weaken/;
 
-our $VERSION = '0.00010';
+our $VERSION = '0.00011';
 
 extends 'Catalyst::View';
 
@@ -145,24 +145,20 @@ sub _build_xslate {
         module    => $self->module,
     );
 
-    if (my $input_layer = $self->input_layer) {
-        $args{input_layer} = $input_layer;
+    # optional stuff
+    foreach my $field ( qw( input_layer syntax escape verbose ) ) {
+        if (my $value = $self->$field) {
+            $args{$field} = $value;
+        }
     }
 
-    if (my $syntax = $self->syntax) {
-        $args{syntax} = $syntax;
-    }
-
-    if (my $escape = $self->escape) {
-        $args{escape} = $escape;
-    }
-
-    if (my $verbose = $self->verbose) {
-        $args{verbose} = $verbose;
-    }
-    
-    my $xslate = Text::Xslate->new(%args);
+    my $xslate = $self->_get_xslate(%args);
     $self->xslate( $xslate );
+}
+
+sub _get_xslate {
+    my ($self,%args) = @_;
+    Text::Xslate->new(%args);
 }
 
 sub ACCEPT_CONTEXT {
