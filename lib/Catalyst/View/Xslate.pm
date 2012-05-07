@@ -6,9 +6,11 @@ use Text::Xslate;
 use namespace::autoclean;
 use Scalar::Util qw/blessed weaken/;
 
-our $VERSION = '0.00013';
+our $VERSION = '0.00014';
 
 extends 'Catalyst::View';
+
+with 'Catalyst::Component::ApplicationAttribute';
 
 has catalyst_var => (
     is => 'rw',
@@ -26,6 +28,12 @@ has content_charset => (
     is => 'rw',
     isa => 'Str',
     default => 'UTF-8'
+);
+
+has encode_body => (
+    is => 'rw',
+    isa => 'Bool',
+    default => 1,
 );
 
 my $clearer = sub { $_[0]->clear_xslate };
@@ -82,13 +90,13 @@ has input_layer => (
     isa => 'Str',
     trigger => $clearer,
 );
-    
+
 has syntax => (
     is => 'rw',
     isa => 'Str',
     trigger => $clearer,
 );
-    
+
 has escape => (
     is => 'rw',
     isa => 'Str',
@@ -100,10 +108,10 @@ has suffix => (
     isa => 'Str',
     trigger => $clearer,
 );
-    
+
 has verbose => (
     is => 'rw',
-    isa => 'Bool',
+    isa => 'Int',
     trigger => $clearer,
 );
 
@@ -111,6 +119,7 @@ has xslate => (
     is => 'rw',
     isa => 'Text::Xslate',
     clearer => 'clear_xslate',
+    lazy => 1, builder => '_build_xslate',
 );
 
 my $expose_methods_tc = subtype 'HashRef', where { $_ };
@@ -129,13 +138,14 @@ has expose_methods => (
 );
 
 sub _build_xslate {
-    my ($self, $c) = @_;
+    my $self = shift;
 
-    my $name = $c;
+    my $app = $self->_app;
+    my $name = $app;
     $name =~ s/::/_/g;
 
     my %args = (
-        path      => $self->path || [ $c->path_to('root') ],
+        path      => $self->path || [ $app->path_to('root') ],
         cache_dir => $self->cache_dir || File::Spec->catdir(File::Spec->tmpdir, $name),
         map { ($_ => $self->$_) }
             qw( cache footer function header module )
@@ -148,21 +158,7 @@ sub _build_xslate {
         }
     }
 
-    my $xslate = $self->_get_xslate(%args);
-    $self->xslate( $xslate );
-}
-
-sub _get_xslate {
-    my ($self,%args) = @_;
-    Text::Xslate->new(%args);
-}
-
-sub ACCEPT_CONTEXT {
-    my ($self, $c) = @_;
-    if ( ! $self->xslate ) {
-        $self->_build_xslate( $c );
-    }
-    return $self;
+    return Text::Xslate->new(%args);
 }
 
 sub process {
@@ -188,7 +184,12 @@ sub process {
         $res->content_type('text/html; charset=' . $self->content_charset);
     }
 
-    $res->body( encode($self->content_charset, $output) );
+    if ( $self->encode_body ) {
+        $res->body( encode($self->content_charset, $output) );
+    }
+    else {
+        $res->body( $output );
+    }
 
     return 1;
 }
@@ -273,6 +274,12 @@ C<include> directives do inside Text::Xslate.
 =head2 content_charset
 
 The charset used to output the response body. The value defaults to 'UTF-8'.
+
+=head2 encode_body
+
+By default, output will be encoded to C<content_charset>.
+You can set it to 0 to disable this behavior.
+(you need to do this if you're using C<Catalyst::Plugin::Unicode::Encoding>)
 
 =head2 Text::Xslate CONFIGURATION
 
