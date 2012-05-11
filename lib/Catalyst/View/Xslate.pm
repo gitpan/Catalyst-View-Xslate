@@ -5,8 +5,9 @@ use Encode;
 use Text::Xslate;
 use namespace::autoclean;
 use Scalar::Util qw/blessed weaken/;
+use File::Find ();
 
-our $VERSION = '0.00014';
+our $VERSION = '0.00015';
 
 extends 'Catalyst::View';
 
@@ -42,7 +43,10 @@ has path => (
     is => 'rw',
     isa => 'ArrayRef',
     trigger => $clearer,
+    lazy => 1, builder => '_build_path',
 );
+
+sub _build_path { return [ shift->_app->path_to('root') ] }
 
 has cache_dir => (
     is => 'rw',
@@ -107,6 +111,7 @@ has suffix => (
     is => 'rw',
     isa => 'Str',
     trigger => $clearer,
+    default => '.tx',
 );
 
 has verbose => (
@@ -137,6 +142,12 @@ has expose_methods => (
     coerce => 1,
 );
 
+has preload => (
+    is => 'ro',
+    isa => 'Bool',
+    default => 1,
+);
+
 sub _build_xslate {
     my $self = shift;
 
@@ -145,7 +156,7 @@ sub _build_xslate {
     $name =~ s/::/_/g;
 
     my %args = (
-        path      => $self->path || [ $app->path_to('root') ],
+        path      => $self->path,
         cache_dir => $self->cache_dir || File::Spec->catdir(File::Spec->tmpdir, $name),
         map { ($_ => $self->$_) }
             qw( cache footer function header module )
@@ -159,6 +170,28 @@ sub _build_xslate {
     }
 
     return Text::Xslate->new(%args);
+}
+
+sub BUILD {
+    my $self = shift;
+    if ($self->preload) {
+        $self->preload_templates();
+    }
+}
+
+sub preload_templates {
+    my $self = shift;
+    my ( $paths, $suffix ) = ( $self->path, $self->suffix );
+    my $xslate = $self->xslate;
+    foreach my $path (@$paths) {
+        File::Find::find( sub {
+            if (/\Q$suffix\E$/) {
+                my $file = $File::Find::name;
+                $file =~ s/\Q$path\E .//xsm;
+                $xslate->load_file($file);
+            }
+        }, $path);
+    }
 }
 
 sub process {
@@ -212,13 +245,9 @@ sub render {
         }
     }
 
-    if ( ! $self->xslate ) {
-        $self->_build_xslate( $c );
-    }
-
     local $vars->{ $self->catalyst_var } =
         $vars->{ $self->catalyst_var } || $c;
-    
+
     if(ref $template eq 'SCALAR') {
         return $self->xslate->render_string( $$template, $vars );
     } else {
@@ -321,6 +350,12 @@ Use this to enable TT2 compatible variable methods via Text::Xslate::Bridge::TT2
         default => sub { [ 'Text::Xslate::Bridge::TT2Like' ] }
     );
 
+=head1 preload
+
+Boolean flag indicating if templates should be preloaded. By default this is enabled.
+
+Preloading templates will basically cutdown the cost of template compilation for the first hit.
+
 =head2 expose_methods
 
 Use this option to specify methods from the View object to be exposed in the
@@ -373,6 +408,10 @@ string.
     $view->render($c, "/path/to/a/template.tx", \%vars );
 
     $view->render($c, \'This is a xslate template!', \%vars );
+
+=head2 C<$view->preload_templates>
+
+Preloads templates in $view-E<gt>path.
 
 =head1 AUTHOR
 
