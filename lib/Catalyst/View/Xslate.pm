@@ -7,7 +7,7 @@ use namespace::autoclean;
 use Scalar::Util qw/blessed weaken/;
 use File::Find ();
 
-our $VERSION = '0.00016';
+our $VERSION = '0.00017';
 
 extends 'Catalyst::View';
 
@@ -107,6 +107,12 @@ has escape => (
     trigger => $clearer,
 );
 
+has type => (
+    is => 'rw',
+    isa => 'Str',
+    trigger => $clearer,
+);
+
 has suffix => (
     is => 'rw',
     isa => 'Str',
@@ -163,8 +169,8 @@ sub _build_xslate {
     );
 
     # optional stuff
-    foreach my $field ( qw( input_layer syntax escape verbose suffix ) ) {
-        if (my $value = $self->$field) {
+    foreach my $field ( qw( input_layer syntax escape verbose suffix type ) ) {
+        if (defined(my $value = $self->$field)) {
             $args{$field} = $value;
         }
     }
@@ -330,6 +336,8 @@ cause the previously created underlying Text::Xslate object to be cleared
 =head2 header
 
 =head2 escape
+
+=head2 type
 
 =head2 footer
 
